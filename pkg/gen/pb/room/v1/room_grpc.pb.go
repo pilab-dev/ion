@@ -400,8 +400,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RoomSignalClient interface {
-	// Signal
-	Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Request, Reply], error)
+	// Signal API for room
+	Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SignalRequest, SignalReply], error)
 }
 
 type roomSignalClient struct {
@@ -412,25 +412,25 @@ func NewRoomSignalClient(cc grpc.ClientConnInterface) RoomSignalClient {
 	return &roomSignalClient{cc}
 }
 
-func (c *roomSignalClient) Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Request, Reply], error) {
+func (c *roomSignalClient) Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[SignalRequest, SignalReply], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &RoomSignal_ServiceDesc.Streams[0], RoomSignal_Signal_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Request, Reply]{ClientStream: stream}
+	x := &grpc.GenericClientStream[SignalRequest, SignalReply]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type RoomSignal_SignalClient = grpc.BidiStreamingClient[Request, Reply]
+type RoomSignal_SignalClient = grpc.BidiStreamingClient[SignalRequest, SignalReply]
 
 // RoomSignalServer is the server API for RoomSignal service.
 // All implementations must embed UnimplementedRoomSignalServer
 // for forward compatibility.
 type RoomSignalServer interface {
-	// Signal
-	Signal(grpc.BidiStreamingServer[Request, Reply]) error
+	// Signal API for room
+	Signal(grpc.BidiStreamingServer[SignalRequest, SignalReply]) error
 	mustEmbedUnimplementedRoomSignalServer()
 }
 
@@ -441,7 +441,7 @@ type RoomSignalServer interface {
 // pointer dereference when methods are called.
 type UnimplementedRoomSignalServer struct{}
 
-func (UnimplementedRoomSignalServer) Signal(grpc.BidiStreamingServer[Request, Reply]) error {
+func (UnimplementedRoomSignalServer) Signal(grpc.BidiStreamingServer[SignalRequest, SignalReply]) error {
 	return status.Errorf(codes.Unimplemented, "method Signal not implemented")
 }
 func (UnimplementedRoomSignalServer) mustEmbedUnimplementedRoomSignalServer() {}
@@ -466,11 +466,11 @@ func RegisterRoomSignalServer(s grpc.ServiceRegistrar, srv RoomSignalServer) {
 }
 
 func _RoomSignal_Signal_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(RoomSignalServer).Signal(&grpc.GenericServerStream[Request, Reply]{ServerStream: stream})
+	return srv.(RoomSignalServer).Signal(&grpc.GenericServerStream[SignalRequest, SignalReply]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type RoomSignal_SignalServer = grpc.BidiStreamingServer[Request, Reply]
+type RoomSignal_SignalServer = grpc.BidiStreamingServer[SignalRequest, SignalReply]
 
 // RoomSignal_ServiceDesc is the grpc.ServiceDesc for RoomSignal service.
 // It's only intended for direct use with grpc.RegisterService,

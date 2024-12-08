@@ -25,8 +25,10 @@ const (
 // RTCClient is the client API for RTC service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+//
+// RTC is the service for real-time communication via WebRTC.
 type RTCClient interface {
-	Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Signalling, Signalling], error)
+	Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Request, Reply], error)
 }
 
 type rTCClient struct {
@@ -37,24 +39,26 @@ func NewRTCClient(cc grpc.ClientConnInterface) RTCClient {
 	return &rTCClient{cc}
 }
 
-func (c *rTCClient) Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Signalling, Signalling], error) {
+func (c *rTCClient) Signal(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[Request, Reply], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &RTC_ServiceDesc.Streams[0], RTC_Signal_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[Signalling, Signalling]{ClientStream: stream}
+	x := &grpc.GenericClientStream[Request, Reply]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type RTC_SignalClient = grpc.BidiStreamingClient[Signalling, Signalling]
+type RTC_SignalClient = grpc.BidiStreamingClient[Request, Reply]
 
 // RTCServer is the server API for RTC service.
 // All implementations must embed UnimplementedRTCServer
 // for forward compatibility.
+//
+// RTC is the service for real-time communication via WebRTC.
 type RTCServer interface {
-	Signal(grpc.BidiStreamingServer[Signalling, Signalling]) error
+	Signal(grpc.BidiStreamingServer[Request, Reply]) error
 	mustEmbedUnimplementedRTCServer()
 }
 
@@ -65,7 +69,7 @@ type RTCServer interface {
 // pointer dereference when methods are called.
 type UnimplementedRTCServer struct{}
 
-func (UnimplementedRTCServer) Signal(grpc.BidiStreamingServer[Signalling, Signalling]) error {
+func (UnimplementedRTCServer) Signal(grpc.BidiStreamingServer[Request, Reply]) error {
 	return status.Errorf(codes.Unimplemented, "method Signal not implemented")
 }
 func (UnimplementedRTCServer) mustEmbedUnimplementedRTCServer() {}
@@ -90,11 +94,11 @@ func RegisterRTCServer(s grpc.ServiceRegistrar, srv RTCServer) {
 }
 
 func _RTC_Signal_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(RTCServer).Signal(&grpc.GenericServerStream[Signalling, Signalling]{ServerStream: stream})
+	return srv.(RTCServer).Signal(&grpc.GenericServerStream[Request, Reply]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type RTC_SignalServer = grpc.BidiStreamingServer[Signalling, Signalling]
+type RTC_SignalServer = grpc.BidiStreamingServer[Request, Reply]
 
 // RTC_ServiceDesc is the grpc.ServiceDesc for RTC service.
 // It's only intended for direct use with grpc.RegisterService,
